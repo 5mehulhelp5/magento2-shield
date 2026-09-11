@@ -55,7 +55,7 @@ class Test extends Command
     /**
      * @SuppressWarnings("PHPMD.UnusedFormalParameter")
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $area = strtoupper($input->getArgument('type'));
         $paramName = $input->getArgument('name');
@@ -70,5 +70,6 @@ class Test extends Command
             // @codingStandardsIgnoreEnd
             $output->writeln("");
         }
+        return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
     }
 }

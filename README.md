@@ -1,60 +1,50 @@
-# MSP Shield
+# Magento 2 Shield (IPS/WAF) — utrzymywany fork (SISL)
 
-MSP Shield is the **most powerful and most effective protection** against malicious user in the MSP Security Suite.<br />
-It is a fully featured **Intrusion Detection** and **Intrusion Prevention** System for PHP.<br />
-<br />
-MSP Shield is capable of detecting a wide number of **hack attempts** and protect your Magento 2 from a wide number
-of potential **code vulnerabilities**.<br />
-<br />
-You will have an high level of protection against 0-day vulnerabilities, code injections, exploit testing and other known attack patterns.<br />
-<br />
-**NOTE:** Installing this module does not exempt you from keeping your system **up to date**.<br />
-<br />
+**System wykrywania i zapobiegania włamaniom (IPS/WAF)** dla Magento 2. Analizuje przychodzące
+żądania (parametry GET/POST/COOKIE) pod kątem znanych wzorców ataków — **SQL injection**, **XSS**,
+próby manipulacji — i potrafi je zablokować, zanim trafią do aplikacji. Wykorzystuje parser SQL
+(`phpmyadmin/sql-parser`) do realnej analizy potencjalnych zapytań, nie tylko proste regexy.
 
-> Member of **MSP Security Suite**
->
-> See: https://github.com/magespecialist/m2-MSP_Security_Suite
+Część **MageSpecialist Security Suite**. To utrzymywany fork porzuconego `msp/shield` (ostatnie
+wydanie 2017, `php ^7.1` — **nie wchodzi na żadne PHP 8.x**). Fork rozluźnia zależności, aktualizuje
+komendę CLI do Symfony Console 7 (z 2.4.9) i jest zweryfikowany na **Magento 2.4.9 / PHP 8.4**
+(di:compile + realny test: payload SQLi i XSS wykryte, czysty payload przepuszczony).
 
-## Installing on Magento2:
+## Zgodność
+- Magento **2.4.4 – 2.4.9** (Open Source / Adobe Commerce)
+- PHP **8.1 – 8.4**
+- Wymaga `msp/security-suite-common` (nasz fork) + `phpmyadmin/sql-parser`
 
-**1. Install using composer**
-
-From command line: 
-
+## Instalacja
+```bash
+composer config repositories.sisl-msp-common vcs https://github.com/SISL-source/magento2-security-suite-common
+composer config repositories.sisl-shield vcs https://github.com/SISL-source/magento2-shield
+composer require msp/shield:dev-main
+bin/magento module:enable MSP_SecuritySuiteCommon MSP_Shield
+bin/magento setup:upgrade
+bin/magento setup:di:compile   # tryb produkcyjny
 ```
-composer require msp/shield
-php bin/magento setup:upgrade
+
+## Test z linii poleceń
+Sprawdź, czy silnik wykrywa zagrożenie w danym parametrze:
+```bash
+# Wykryje SQL injection:
+bin/magento msp:shield:test GET id "1 UNION SELECT username,password FROM admin_user--"
+# Wykryje XSS:
+bin/magento msp:shield:test GET s "<script>alert(document.cookie)</script>"
+# Czysty payload -> brak zagrożeń (pusty wynik):
+bin/magento msp:shield:test GET q "zwykle zapytanie"
 ```
 
-**2. Enable and configure from your Magento backend config**
+## Konfiguracja
+**Sklep → Konfiguracja → MSP Security Suite → Shield** — tryb działania (log / block), progi,
+reguły. Zdarzenia trafiają do logu Security Suite. Zalecane wdrożenie: najpierw tryb log
+(obserwacja fałszywych alarmów na Twoim ruchu), potem block.
 
-<img src="https://raw.githubusercontent.com/magespecialist/m2-MSP_Shield/master/screenshots/config.png" />
+## Uwaga
+WAF na poziomie aplikacji to **warstwa uzupełniająca**, nie zamiennik łatania Magento, silnego
+hasła i [ograniczenia dostępu do panelu po IP](https://github.com/SISL-source/magento2-admin-restriction).
+Traktuj go jako element obrony w głąb.
 
-NOTE: Enabling this module for backend can trigger false positives, we strongly suggest to keep it enabled only for
- frontend and to protect your backend with https://github.com/magespecialist/m2-MSP_AdminRestriction module .
-
-## How to test it
-
-MSP Shield can detect a wide number of PHP attack patterns and attack attempts.<br />
-You can test it in any Magento 2 form by typing a malicious request.<br />
-<br />
-For example you can try typing `; drop database magento` in any form.<br />
-<br />
-This will simulate a **SQL injection attack**. Magento is already protected against this kind of attack, but you can try it
-to verify the correct configuration of MSP Shield.
-
-<img src="https://raw.githubusercontent.com/magespecialist/m2-MSP_Shield/master/screenshots/injection_attempt.png" />
-
-If you correctly installed and configured MSP Shield, an emergency stop screen will appear.
-
-## Hack Attempt detected (with stealth mode disabled)
-
-<img src="https://raw.githubusercontent.com/magespecialist/m2-MSP_Shield/master/screenshots/detected.png" />
-
-## Hack Attempt detected (with stealth mode enabled)
-
-<img src="https://raw.githubusercontent.com/magespecialist/m2-MSP_Shield/master/screenshots/detected_stealth.png" />
-
-## Logged entries ##
-
-You can browse and search logged events for blocked or non-blocked requests in **System > MSP Security Suite > Events Report**.
+## Licencja
+OSL-3.0 (jak oryginał). Fork utrzymywany przez [SISL](https://sisl.pl).
