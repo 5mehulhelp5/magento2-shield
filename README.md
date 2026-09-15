@@ -1,49 +1,51 @@
-# Magento 2 Shield (IPS/WAF) — utrzymywany fork (SISL)
+# Magento 2 Shield (IPS/WAF) — maintained fork (SISL)
 
-**System wykrywania i zapobiegania włamaniom (IPS/WAF)** dla Magento 2. Analizuje przychodzące
-żądania (parametry GET/POST/COOKIE) pod kątem znanych wzorców ataków — **SQL injection**, **XSS**,
-próby manipulacji — i potrafi je zablokować, zanim trafią do aplikacji. Wykorzystuje parser SQL
-(`phpmyadmin/sql-parser`) do realnej analizy potencjalnych zapytań, nie tylko proste regexy.
+An **intrusion detection and prevention system (IPS/WAF)** for Magento 2. It analyses incoming
+requests (GET/POST/COOKIE parameters) for known attack patterns — **SQL injection**, **XSS**,
+tampering attempts — and can block them before they reach the application. It uses an SQL parser
+(`phpmyadmin/sql-parser`) for real analysis of potential queries, not just simple regexes.
 
-Część **MageSpecialist Security Suite**. To utrzymywany fork porzuconego `msp/shield` (ostatnie
-wydanie 2017, `php ^7.1` — **nie wchodzi na żadne PHP 8.x**). Fork rozluźnia zależności, aktualizuje
-komendę CLI do Symfony Console 7 (z 2.4.9) i jest zweryfikowany na **Magento 2.4.9 / PHP 8.4**
-(di:compile + realny test: payload SQLi i XSS wykryte, czysty payload przepuszczony).
+Part of the **MageSpecialist Security Suite**. This is a maintained fork of the abandoned
+`msp/shield` (last release 2017, `php ^7.1` — **does not run on any PHP 8.x**). The fork loosens the
+dependencies, updates the CLI command to Symfony Console 7 (shipped with 2.4.9) and is verified on
+**Magento 2.4.9 / PHP 8.4** (di:compile + a real test: SQLi and XSS payloads detected, a clean
+payload let through).
 
-## Zgodność
+## Compatibility
 - Magento **2.4.4 – 2.4.9** (Open Source / Adobe Commerce)
 - PHP **8.1 – 8.4**
-- Wymaga `msp/security-suite-common` (nasz fork) + `phpmyadmin/sql-parser`
+- Requires `sisl-source/magento2-security-suite-common` (our fork) + `phpmyadmin/sql-parser`
 
-## Instalacja
+## Installation
 
 ```bash
 composer require sisl-source/magento2-shield
 bin/magento module:enable MSP_SecuritySuiteCommon MSP_Shield
 bin/magento setup:upgrade
-bin/magento setup:di:compile   # tryb produkcyjny
+bin/magento setup:di:compile   # production mode
 ```
 
-## Test z linii poleceń
-Sprawdź, czy silnik wykrywa zagrożenie w danym parametrze:
+## Command-line test
+Check whether the engine detects a threat in a given parameter:
 ```bash
-# Wykryje SQL injection:
+# Detects SQL injection:
 bin/magento msp:shield:test GET id "1 UNION SELECT username,password FROM admin_user--"
-# Wykryje XSS:
+# Detects XSS:
 bin/magento msp:shield:test GET s "<script>alert(document.cookie)</script>"
-# Czysty payload -> brak zagrożeń (pusty wynik):
-bin/magento msp:shield:test GET q "zwykle zapytanie"
+# Clean payload -> no threats (empty result):
+bin/magento msp:shield:test GET q "an ordinary query"
 ```
 
-## Konfiguracja
-**Sklep → Konfiguracja → MSP Security Suite → Shield** — tryb działania (log / block), progi,
-reguły. Zdarzenia trafiają do logu Security Suite. Zalecane wdrożenie: najpierw tryb log
-(obserwacja fałszywych alarmów na Twoim ruchu), potem block.
+## Configuration
+**Stores → Configuration → MSP Security Suite → Shield** — operating mode (log / block), thresholds,
+rules. Events go to the Security Suite log. Recommended rollout: start in log mode (watch for false
+positives on your traffic), then switch to block.
 
-## Uwaga
-WAF na poziomie aplikacji to **warstwa uzupełniająca**, nie zamiennik łatania Magento, silnego
-hasła i [ograniczenia dostępu do panelu po IP](https://github.com/SISL-source/magento2-admin-restriction).
-Traktuj go jako element obrony w głąb.
+## Note
+An application-level WAF is a **complementary layer**, not a replacement for patching Magento, a
+strong password and [admin panel IP
+restriction](https://github.com/SISL-source/magento2-admin-restriction). Treat it as part of
+defence in depth.
 
-## Licencja
-OSL-3.0 (jak oryginał). Fork utrzymywany przez [SISL](https://sisl.pl).
+## License
+OSL-3.0 (same as upstream). Fork maintained by [SISL](https://sisl.pl).
