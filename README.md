@@ -16,10 +16,9 @@ komendę CLI do Symfony Console 7 (z 2.4.9) i jest zweryfikowany na **Magento 2.
 - Wymaga `msp/security-suite-common` (nasz fork) + `phpmyadmin/sql-parser`
 
 ## Instalacja
+
 ```bash
-composer config repositories.sisl-msp-common vcs https://github.com/SISL-source/magento2-security-suite-common
-composer config repositories.sisl-shield vcs https://github.com/SISL-source/magento2-shield
-composer require msp/shield:dev-main
+composer require sisl-source/magento2-shield
 bin/magento module:enable MSP_SecuritySuiteCommon MSP_Shield
 bin/magento setup:upgrade
 bin/magento setup:di:compile   # tryb produkcyjny
